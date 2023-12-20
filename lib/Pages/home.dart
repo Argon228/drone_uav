@@ -1,141 +1,163 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_osm_plugin/flutter_osm_plugin.dart';
-class Setup extends StatefulWidget {
-  const Setup({super.key});
+import 'package:flutter_map/flutter_map.dart';
+import 'package:latlong2/latlong.dart';
+import 'package:google_fonts/google_fonts.dart';
 
+class Setup extends StatefulWidget {
   @override
   State<Setup> createState() => _SetupState();
 }
 
-class _SetupState extends State<Setup>{
-  final List<String> users = ["1v", "2v", "3v", "4v", "5v"];
-  int selectedIndex = -1;
-  void road()async{
-    await mapController.drawRoad(
-      GeoPoint(latitude: 	55.81838, longitude: 37.41224),
-      GeoPoint(latitude: 55.751999, longitude: 37.617734),
-      roadType: RoadType.foot,
-      intersectPoint : [GeoPoint(latitude: 66, longitude: 28)],
-      roadOption: RoadOption(
-      roadWidth: 5,
-      roadColor: Colors.blue,
-      zoomInto: true,
-    ),
-    );
-  }
-  MapController mapController = MapController.customLayer(
-    initMapWithUserPosition: UserTrackingOption(
-      enableTracking: true,
-      unFollowUser: false,
-    ),
-      areaLimit: BoundingBox(
-        east: 10.4922941,
-        north: 47.8084648,
-        south: 45.817995,
-        west:  5.9559113,
-      ),
-    customTile: CustomTile(
-      sourceName: "opentopomap",
-      tileExtension: ".png",
-      minZoomLevel: 2,
-      maxZoomLevel: 19,
-      urlsServers: [
-        TileURLs(
-          url: "https://tile.opentopomap.org/",
-          subdomains: [],
-        )
-      ],
-      tileSize: 256,
-    ),
-  );
+class _SetupState extends State<Setup> {
+  final MapController mapController = MapController();
+  List<LatLng> points = [];
+  List<Map<String, double>> pointsData = [];
 
+  void _handleTap(LatLng latlng) {
+    setState(() {
+      points.add(latlng);
+      pointsData.add({
+        'latitude': latlng.latitude,
+        'longitude': latlng.longitude,
+      });
+    });
+  }
+
+
+  void _resetMarkers() {
+    setState(() {
+      points.clear();
+    });
+  }
+
+  List<Polyline> _buildPolylines() {
+    var polylineList = <Polyline>[];
+    if (points.length > 1) {
+      polylineList.add(
+        Polyline(
+          points: [...points, points.first],
+          strokeWidth: 2.0,
+          isDotted: true,
+          color: Colors.deepPurple,
+        ),
+      );
+    }
+    return polylineList;
+  }
+
+  List<Marker> _buildMarkers() {
+    return points.asMap().entries.map((entry) {
+      int idx = entry.key;
+      LatLng latlng = entry.value;
+      return Marker(
+        width: 80,
+        height: 80,
+        point: latlng,
+        builder: (ctx) => Container(
+          child: Stack(
+            alignment: Alignment.center,
+            children: <Widget>[
+          Container(
+          margin: EdgeInsets.all(10),
+          padding: EdgeInsets.all(10),
+          decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(30),
+              border: Border.all(width: 1, color: Colors.black)
+          ),
+          child: Icon(
+            Icons.location_on,
+            color: Colors.deepPurple,
+            size: 20,
+          ),
+        ),
+              Positioned(
+                bottom: -5,
+                child: Text(
+                  '${idx + 1}', // Номер маркера
+                  style: GoogleFonts.raleway(
+                      textStyle: TextStyle(
+                          fontSize: 20,
+                          color: Colors.black
+                      )
+                  )
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+    }).toList();
+  }
   void _openMenu(){
     Navigator.of(context).push(
-      MaterialPageRoute(builder: (BuildContext context){
-        return Drawer(
-            child: new ListView(
-            children: <Widget>[
-        ListTile(
-        title: const Text('Навигация',style: TextStyle(fontSize: 26),),
-        onTap: () {Navigator.pushReplacementNamed(context, '/');},
-        ),
-              ListTile(title: const Text('Конфигурация',style: TextStyle(fontSize: 26),),onTap: () {Navigator.pushReplacementNamed(context, '/conf');}),
-              ListTile(title: const Text('Отказобезопасность',style: TextStyle(fontSize: 26),),onTap: () {Navigator.pushNamed(context, '/fail');}),
-              ListTile(title: const Text('Питание и Батарея',style: TextStyle(fontSize: 26),),onTap: () {Navigator.pushReplacementNamed(context, '/poba');}),
-              ListTile(title: const Text('Порты',style: TextStyle(fontSize: 26),),onTap: () {Navigator.pushReplacementNamed(context, '/port');}),
-              ListTile(title: const Text('Видео',style: TextStyle(fontSize: 26),),onTap: () {Navigator.pushReplacementNamed(context, '/vid');}),
-              Divider(color: Colors.black87),
-              ListTile(title: const Text('Сообщить об ошибке',style: TextStyle(fontSize: 26),),onTap: () {}),
-        ],));
-      })
+        MaterialPageRoute(builder: (BuildContext context){
+          return Drawer(
+              child: new ListView(
+                children: <Widget>[
+                  ListTile(
+                    title: const Text('Навигация',style: TextStyle(fontSize: 26),),
+                    onTap: () {Navigator.pushReplacementNamed(context, '/');},
+                  ),
+                  ListTile(title: const Text('Конфигурация',style: TextStyle(fontSize: 26),),onTap: () {Navigator.pushReplacementNamed(context, '/conf');}),
+                  ListTile(title: const Text('Отказобезопасность',style: TextStyle(fontSize: 26),),onTap: () {Navigator.pushNamed(context, '/fail');}),
+                  ListTile(title: const Text('Питание и Батарея',style: TextStyle(fontSize: 26),),onTap: () {Navigator.pushReplacementNamed(context, '/poba');}),
+                  ListTile(title: const Text('Порты',style: TextStyle(fontSize: 26),),onTap: () {Navigator.pushReplacementNamed(context, '/port');}),
+                  ListTile(title: const Text('Видео',style: TextStyle(fontSize: 26),),onTap: () {Navigator.pushReplacementNamed(context, '/vid');}),
+                  Divider(color: Colors.black87),
+                  ListTile(title: const Text('Сообщить об ошибке',style: TextStyle(fontSize: 26),),onTap: () {}),
+                ],));
+        })
     );
   }
-
   @override
   Widget build(BuildContext context) {
+    var polylines = _buildPolylines();
+    var markers = _buildMarkers();
+
     return Scaffold(
-      backgroundColor: Colors.white,
       appBar: AppBar(
           backgroundColor: Colors.green,
-        title: Text('OWL EYE Навигация', style: TextStyle(fontSize: 30, color: Colors.white, fontStyle: FontStyle.italic),),
-        centerTitle: true,
-        actions: [IconButton(
-            onPressed: (){
-              road();
-            },
-            icon: Icon(Icons.add_chart)),],
-        leading:
-          IconButton(
+          title: Text('OWL EYE Map', style: TextStyle(fontSize: 30, color: Colors.white, fontStyle: FontStyle.italic),),
+          centerTitle: true,
+          leading: IconButton(
               onPressed: (){
                 _openMenu();
               },
-              icon: Icon(Icons.menu))),
-      body: SafeArea(
-        child:
-        OSMFlutter(
-            controller:mapController,
-            osmOption: OSMOption(
-              userTrackingOption: UserTrackingOption(
-                enableTracking: true,
-                unFollowUser: false,
-              ),
-              zoomOption: ZoomOption(
-                initZoom: 16,
-                minZoomLevel: 3,
-                maxZoomLevel: 19,
-                stepZoom: 1.0,
-              ),
-              userLocationMarker: UserLocationMaker(
-                personMarker: MarkerIcon(
-                  icon: Icon(
-                    Icons.location_history_rounded,
-                    color: Colors.red,
-                    size: 48,
-                  ),
-                ),
-                directionArrowMarker: MarkerIcon(
-                  icon: Icon(
-                    Icons.double_arrow,
-                    size: 48,
-                  ),
-                ),
-              ),
-              roadConfiguration: RoadOption(
-                roadColor: Colors.yellowAccent,
-              ),
-              markerOption: MarkerOption(
-                  defaultMarker: MarkerIcon(
-                    icon: Icon(
-                      Icons.person_pin_circle,
-                      color: Colors.blue,
-                      size: 56,
-                    ),
-                  )
-              ),
-            )
+              icon: Icon(Icons.menu))
+      ),
+      body: FlutterMap(
+        mapController: mapController,
+        options: MapOptions(
+          center: LatLng(55.8, 37.43),
+          zoom: 15.0,
+          onTap: (_, latlng) => _handleTap(latlng),
         ),
+        children: [
+          TileLayer(
+            urlTemplate: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
+            subdomains: ['a', 'b', 'c'],
+          ),
+          PolylineLayer(
+            polylines: polylines,
+          ),
+          MarkerLayer(
+            markers: markers,
+          ),
+        ],
+      ),
+      floatingActionButton: Column(
+        mainAxisAlignment: MainAxisAlignment.end,
+        children: <Widget>[
+          FloatingActionButton(
+            onPressed: _resetMarkers,
+            child: Icon(Icons.delete),
+            tooltip: 'Reset Markers',
+            backgroundColor: Colors.red,
+            heroTag: 'reset',
+          ),
+          SizedBox(height: 10),
+        ],
       ),
     );
-
   }
 }

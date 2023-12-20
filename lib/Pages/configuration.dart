@@ -41,11 +41,25 @@ class _ConfigurationState extends State<Configuration> {
               },
               icon: Icon(Icons.menu))
       ),
-      body: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [Column(mainAxisAlignment: MainAxisAlignment.center,
-              children: [Text('Хммммм', style: TextStyle(color: Colors.red, fontSize: 30),)]),]
-      ),
+      body: Container(
+        child: new Row(
+          children: <Widget>[
+            new Expanded (
+              flex:1,
+              child : Column(
+                children: <Widget>[ColoredBox(color: Colors.red)],
+              ),),
+            new Expanded(
+              flex :2,
+              child: Column(
+                children: <Widget>[
+                  new Text(
+                      "This is a long text this is a long test this is This is a long text this is a long test this is This is a long text this is a long test this is This is a long text this is a long test this is This is a long text this is a long test this is This is a long text this is a long test this is ")
+                ],
+              ),)
+          ],
+        ),
+      )
     );
   }
 }
